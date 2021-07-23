@@ -1,8 +1,9 @@
-import time
 import threading
+import time
+
 import requests
-from bs4 import BeautifulSoup
 import telebot
+from bs4 import BeautifulSoup
 from telebot import types
 
 TOKEN = ''
@@ -12,7 +13,7 @@ with open('TOKEN.txt') as fl:
         break
 bot = telebot.TeleBot(TOKEN)
 
-bot = telebot.TeleBot(TOKEN)
+DANGEON_ID = 450543987
 
 
 def get_descr(id):
@@ -110,8 +111,8 @@ def checker():
             ok = True
         except Exception:
             try:
-                if not(ok):
-                    bot.send_message(450543987, 'со мной чтото не так')
+                if not (ok):
+                    bot.send_message(DANGEON_ID, 'со мной чтото не так')
                     ok = False
             except Exception:
                 pass
@@ -145,15 +146,59 @@ def callback_inline(call):
                 t1.start()
     except Exception:
         try:
-            bot.send_message(450543987, 'со мной чтото не так')
+            bot.send_message(DANGEON_ID, 'со мной чтото не так')
         except Exception:
             pass
         time.sleep(60 ** 6)
+
+
+def inizialisation(msg):
+    url = msg.text
+
+    if "https://freelance.habr.com/tasks?" not in url:
+        bot.send_message(msg.from_user.id, 'неверная ссылка')
+        return
+    try:
+        resp = requests.get(url)
+        sp = BeautifulSoup(resp.content, 'lxml')
+
+        divs = sp.find_all('article')
+
+        a = divs[0]
+        data = []
+        with open('tags_users.txt') as fl:
+            for i in fl:
+                data.append(i)
+        data.append(str(msg.from_user.id) + ' ' + url + '\n')
+        with open('tags_users.txt', 'w') as fl:
+            for i in data:
+                fl.write(i)
+        f = open('tasks/%s.txt' % msg.from_user.id, 'w')
+        f.close()
+    except Exception:
+        bot.send_message(msg.from_user.id, 'неверная ссылка')
+        return
+
 
 @bot.message_handler(commands=['check'])
 def text_handler(msg):
     bot.send_message(msg.from_user.id, 'i am fine')
     print(msg.from_user.id)
+
+
+@bot.message_handler(commands=['start'])
+def text_handler(msg):
+    ids = []
+    tags = []
+    with open('tags_users.txt') as fl:
+        for i in fl:
+            tags.append(int(i.split()[0]))
+            ids.append(i.split()[1])
+
+    if not (msg.from_user.id in tags):
+        bot.send_message(msg.from_user.id,
+                         text='пришлите ссылку с https://freelance.habr.com/tasks с выбранными тегами')
+        bot.register_next_step_handler(msg, inizialisation)
 
 
 bot.polling()
