@@ -49,7 +49,7 @@ def send_new(id, task):
     keyboard = types.InlineKeyboardMarkup()
     callback_button = types.InlineKeyboardButton(text="описание", callback_data="test")
     keyboard.add(callback_button)
-    s = 'title: ' + task[1] + '\n\nprice: %s\n\nid: %s\n\n' % (task[2], task[0].split('/')[2])
+    s = 'title: ' + task[1] + '\n\nprice: %s\n\nid: %s\n\nurl: %s\n\n' % (task[2], task[0].split('/')[2], 'https://freelance.habr.com' + task[0])
     bot.send_message(int(id), s, reply_markup=keyboard)
 
 
@@ -102,7 +102,6 @@ def checker():
     ok = True
     while True:
         try:
-            print('check: ' + str(c))
             with open('tags_users.txt') as fl:
                 for i in fl:
                     check_updates(i.split()[0])
