@@ -201,4 +201,9 @@ def text_handler(msg):
         bot.register_next_step_handler(msg, inizialisation)
 
 
-bot.polling()
+while True:
+    try:
+        print('connecting')
+        bot.polling()
+    except Exception:
+        print('smthg is wrong, reconnecting')
